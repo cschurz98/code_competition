@@ -7,6 +7,22 @@
 #>
 $port = 8000
 
+# Select Python executable: prefer python3 if available, else python.
+try {
+    if (Get-Command python3 -ErrorAction SilentlyContinue) {
+        $pythonExe = "python3"
+    } elseif (Get-Command python -ErrorAction SilentlyContinue) {
+        $pythonExe = "python"
+    } else {
+        throw "Python 3 not found in PATH"
+    }
+} catch {
+    Write-Host "Unable to find Python. Install Python 3 or use 'npx http-server -p ${port}' (Node)." -ForegroundColor Yellow
+    Write-Host "Press any key to close..." -ForegroundColor Yellow
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    return
+}
+
 # Determine the script's directory so the server serves files from the project folder
 # This prevents launching the server from a different working directory (e.g. when double-clicking the script)
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
@@ -21,7 +37,7 @@ Try {
         $listeners = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
         if ($listeners) {
             $pids = $listeners | Select-Object -ExpandProperty OwningProcess -Unique
-            Write-Host "Found existing process(es) on port $port: $($pids -join ', '). Stopping..."
+            Write-Host "Found existing process(es) on port ${port}: $($pids -join ', '). Stopping..."
             foreach ($pid in $pids) {
                 try { Stop-Process -Id $pid -ErrorAction SilentlyContinue } catch {}
             }
@@ -37,11 +53,11 @@ Try {
     } catch {}
 
     # Launch Python http.server with the script directory as its working directory
-    $serverProcess = Start-Process -FilePath python -ArgumentList "-m", "http.server", "$port" -WorkingDirectory $scriptDir -WindowStyle Hidden -PassThru
+    $serverProcess = Start-Process -FilePath $pythonExe -ArgumentList "-m", "http.server", "$port" -WorkingDirectory $scriptDir -WindowStyle Hidden -PassThru
     Start-Sleep -Seconds 1
     Write-Host ""
-    Write-Host "Python HTTP Server running on port $port (PID: $($serverProcess.Id))" -ForegroundColor Green
-    Start-Process "http://localhost:$port/index.html"
+    Write-Host "Python HTTP Server running on port ${port} (PID: $($serverProcess.Id))" -ForegroundColor Green
+    Start-Process "http://localhost:${port}/index.html"
     
     Write-Host ""
     Write-Host "Press any key to stop the server and close..." -ForegroundColor Yellow
@@ -60,13 +76,16 @@ Try {
         $remaining = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
         if ($remaining) {
             $pids = $remaining | Select-Object -ExpandProperty OwningProcess -Unique
-            Write-Host "Cleaning up remaining processes on port $port : $($pids -join ', ')" -ForegroundColor Yellow
+            Write-Host "Cleaning up remaining processes on port ${port}: $($pids -join ', ')" -ForegroundColor Yellow
             foreach ($pid in $pids) {
                 try { Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue } catch {}
             }
         }
     } catch {}
     
+    if ($serverProcess -and $serverProcess.HasExited) {
+        Write-Host "Server stopped." -ForegroundColor Green
+    }
     Write-Host "Cleanup complete." -ForegroundColor Green
 } Catch {
     Write-Host "Unable to start Python http server. Make sure Python 3 is installed and in your PATH and run this script from the project directory if needed." -ForegroundColor Yellow
