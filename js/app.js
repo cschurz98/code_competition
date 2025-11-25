@@ -1,6 +1,6 @@
 import { PROBLEMS } from './problems.js';
 import { deepEqual, calibrateMachine, downloadJSON } from './utils.js';
-import { fetchLeaderboard as remoteFetchLeaderboard, submitScore as remoteSubmitScore, isRemoteEnabled } from './leaderboard.js';
+import { fetchLeaderboard as remoteFetchLeaderboard, submitScore as remoteSubmitScore, isRemoteEnabled, login, signup, logout, getUser } from './leaderboard.js';
 
 // ---- Application state ----
 const state = {
@@ -477,9 +477,12 @@ function updateLeaderboardUI() {
 function exportData() {
   // If remote leaderboard is enabled, submit to database; otherwise fallback to JSON download
   if (isRemoteEnabled()) {
-    const name = prompt('Enter your name for the leaderboard:', els.usernameDisplay.textContent || 'Player');
-    if (!name) return;
-    els.usernameDisplay.textContent = name;
+    const user = getUser();
+    if (!user) {
+      showLoginModal();
+      return;
+    }
+    const name = user.user_metadata?.username || user.email || 'Player';
     const status = `Submitted: ${new Date().toLocaleTimeString()}`;
     remoteSubmitScore(name, state.myScore, status).then(res => {
       if (!res.ok) {
@@ -487,6 +490,7 @@ function exportData() {
         return;
       }
       // refresh leaderboard after submit
+      alert(res.updated ? 'Score updated!' : 'Score submitted!');
       remoteFetchLeaderboard().then(r => {
         if (r.ok) {
           state.leaderboardData = r.data;
@@ -1083,6 +1087,121 @@ function setupListeners() {
   window.openConsole = openConsole; // expose for dev/debugger
 }
 
+// ---- Login/Auth UI ----
+function showLoginModal() {
+  const modal = document.createElement('div');
+  modal.id = 'auth-modal';
+  modal.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50';
+  modal.innerHTML = `
+    <div class="bg-slate-800 rounded-lg p-6 w-96 shadow-2xl">
+      <h2 class="text-xl font-bold text-white mb-4">Login Required</h2>
+      <div id="auth-tabs" class="flex gap-2 mb-4">
+        <button id="tab-login" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded">Login</button>
+        <button id="tab-signup" class="flex-1 px-4 py-2 bg-slate-700 text-slate-300 rounded">Sign Up</button>
+      </div>
+      <div id="login-form">
+        <input type="text" id="login-email" placeholder="Username" class="w-full px-3 py-2 bg-slate-700 text-white rounded mb-3" />
+        <input type="password" id="login-password" placeholder="Password" class="w-full px-3 py-2 bg-slate-700 text-white rounded mb-3" />
+        <button id="btn-login" class="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-semibold">Login</button>
+      </div>
+      <div id="signup-form" class="hidden">
+        <input type="text" id="signup-username" placeholder="Username" class="w-full px-3 py-2 bg-slate-700 text-white rounded mb-3" />
+        <input type="password" id="signup-password" placeholder="Password (min 6 chars)" class="w-full px-3 py-2 bg-slate-700 text-white rounded mb-3" />
+        <button id="btn-signup" class="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-semibold">Sign Up</button>
+      </div>
+      <div id="auth-error" class="hidden mt-3 p-2 bg-red-900/50 text-red-200 text-sm rounded"></div>
+      <button id="btn-close-auth" class="mt-4 text-slate-400 hover:text-white text-sm">Cancel</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const loginForm = document.getElementById('login-form');
+  const signupForm = document.getElementById('signup-form');
+  const tabLogin = document.getElementById('tab-login');
+  const tabSignup = document.getElementById('tab-signup');
+  const errorDiv = document.getElementById('auth-error');
+
+  tabLogin.addEventListener('click', () => {
+    loginForm.classList.remove('hidden');
+    signupForm.classList.add('hidden');
+    tabLogin.classList.remove('bg-slate-700', 'text-slate-300');
+    tabLogin.classList.add('bg-indigo-600', 'text-white');
+    tabSignup.classList.add('bg-slate-700', 'text-slate-300');
+    tabSignup.classList.remove('bg-indigo-600', 'text-white');
+    errorDiv.classList.add('hidden');
+  });
+
+  tabSignup.addEventListener('click', () => {
+    signupForm.classList.remove('hidden');
+    loginForm.classList.add('hidden');
+    tabSignup.classList.remove('bg-slate-700', 'text-slate-300');
+    tabSignup.classList.add('bg-indigo-600', 'text-white');
+    tabLogin.classList.add('bg-slate-700', 'text-slate-300');
+    tabLogin.classList.remove('bg-indigo-600', 'text-white');
+    errorDiv.classList.add('hidden');
+  });
+
+  document.getElementById('btn-login').addEventListener('click', async () => {
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    if (!email || !password) {
+      errorDiv.textContent = 'Please enter username and password';
+      errorDiv.classList.remove('hidden');
+      return;
+    }
+    const res = await login(email, password);
+    if (!res.ok) {
+      errorDiv.textContent = res.error;
+      errorDiv.classList.remove('hidden');
+      return;
+    }
+    updateUserDisplay();
+    modal.remove();
+  });
+
+  document.getElementById('btn-signup').addEventListener('click', async () => {
+    const username = document.getElementById('signup-username').value;
+    const password = document.getElementById('signup-password').value;
+    if (!username || !password) {
+      errorDiv.textContent = 'Please enter username and password';
+      errorDiv.classList.remove('hidden');
+      return;
+    }
+    if (password.length < 6) {
+      errorDiv.textContent = 'Password must be at least 6 characters';
+      errorDiv.classList.remove('hidden');
+      return;
+    }
+    const res = await signup(null, password, username);
+    if (!res.ok) {
+      errorDiv.textContent = res.error;
+      errorDiv.classList.remove('hidden');
+      return;
+    }
+    updateUserDisplay();
+    modal.remove();
+  });
+
+  document.getElementById('btn-close-auth').addEventListener('click', () => modal.remove());
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+}
+
+function updateUserDisplay() {
+  const user = getUser();
+  if (user) {
+    const username = user.user_metadata?.username || user.email?.split('@')[0] || 'User';
+    els.usernameDisplay.textContent = username;
+    const avatar = document.querySelector('header .w-8.h-8.rounded-full');
+    if (avatar) avatar.textContent = username[0].toUpperCase();
+  } else {
+    els.usernameDisplay.textContent = 'Guest';
+    const avatar = document.querySelector('header .w-8.h-8.rounded-full');
+    if (avatar) avatar.textContent = 'G';
+  }
+}
+
 // ---- Initialization ----
 function init() {
   renderProblemList();
@@ -1092,6 +1211,8 @@ function init() {
   // If remote is enabled, adjust UI and start periodic refresh
   if (isRemoteEnabled()) {
     try {
+      // Check for existing session and update UI
+      updateUserDisplay();
       // Change button labels for clarity
       if (els.btnExport) els.btnExport.textContent = 'Submit';
       if (els.btnImport) els.btnImport.textContent = 'Refresh';
@@ -1100,6 +1221,19 @@ function init() {
         els.btnImport.replaceWith(els.btnImport.cloneNode(true));
         const newImportBtn = document.getElementById('btn-import');
         if (newImportBtn) newImportBtn.addEventListener('click', () => importData({ target: {} }));
+      }
+      // Add logout button to header
+      const userArea = document.querySelector('header .flex.items-center.gap-2');
+      if (userArea && getUser()) {
+        const logoutBtn = document.createElement('button');
+        logoutBtn.className = 'text-xs px-2 py-1 bg-slate-700 hover:bg-slate-600 rounded text-slate-300';
+        logoutBtn.textContent = 'Logout';
+        logoutBtn.addEventListener('click', async () => {
+          await logout();
+          updateUserDisplay();
+          alert('Logged out successfully');
+        });
+        userArea.insertBefore(logoutBtn, userArea.firstChild);
       }
       // Start a periodic refresh to keep leaderboard live
       setInterval(() => {

@@ -79,46 +79,92 @@ Notes/tips:
 
 ## Live Leaderboard (Supabase)
 
-Replace the old JSON Load/Save with a live leaderboard backed by a free Supabase database.
+Replace the old JSON Load/Save with a live leaderboard backed by a free Supabase database with user authentication.
 
 Setup (one-time):
 
-- Create a free project at https://supabase.com and note your Project URL and anon (public) API key: Settings → API.
-- In SQL editor, create a table and open public policies:
+1. Create a free project at https://supabase.com and note your Project URL and anon (public) API key: Settings → API.
+
+2. **Enable email authentication WITHOUT confirmation:**
+   - Go to: **Authentication → Providers → Email**
+   - Toggle **Enable Email Provider** to ON
+   - Toggle **Confirm email** to OFF (important!)
+   - Save changes
+
+3. **Create the scores table** in SQL Editor (SQL Editor → New Query):
 
 ```sql
-create table if not exists public.scores (
-	id bigint generated always as identity primary key,
-	name text not null,
-	score integer not null,
-	status text,
-	timestamp timestamptz not null default now()
+-- Drop existing table and recreate with new schema (WARNING: deletes all existing scores)
+drop table if exists public.scores cascade;
+
+-- Create the scores table with user_id
+create table public.scores (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  name text not null,
+  score integer not null,
+  status text,
+  timestamp timestamptz not null default now(),
+  constraint unique_user_score unique (user_id)
 );
 
+-- Enable Row Level Security
 alter table public.scores enable row level security;
-create policy "Public read scores" on public.scores for select using (true);
-create policy "Public insert scores" on public.scores for insert with check (true);
+
+-- Allow anyone to read scores
+create policy "Anyone can read scores" 
+  on public.scores 
+  for select 
+  using (true);
+
+-- Users can only insert their own score
+create policy "Users can insert own score" 
+  on public.scores 
+  for insert 
+  with check (auth.uid() = user_id);
+
+-- Users can only update their own score
+create policy "Users can update own score" 
+  on public.scores 
+  for update 
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+-- Create indexes for faster queries
+create index if not exists idx_scores_score_desc on public.scores (score desc);
+create index if not exists idx_scores_user_id on public.scores (user_id);
 ```
 
-- Copy `js/leaderboard.config.example.js` to `js/leaderboard.config.js` and fill:
+4. **Configure the app:**
+   - Copy `js/leaderboard.config.example.js` to `js/leaderboard.config.js`
+   - Fill in your credentials:
 
 ```js
 window.LEADERBOARD_CONFIG = {
-	url: 'https://YOUR_PROJECT.supabase.co',
-	anonKey: 'YOUR_ANON_PUBLIC_KEY',
-	table: 'scores'
+  url: 'https://YOUR_PROJECT.supabase.co',
+  anonKey: 'YOUR_ANON_PUBLIC_KEY',
+  table: 'scores'
 };
 ```
 
 Usage:
 
-- When config is present, the Leaderboard buttons become Submit/Refresh, and the list auto-refreshes every 5 seconds.
-- Data is stored in `public.scores`. No server to maintain.
+- Users sign up/login with **username + password only** (no email required)
+- Click Submit → Login/Sign Up modal appears
+- System auto-generates fake emails (e.g., `username@codeclash.local`)
+- Each user can only have ONE score
+- Submitting a higher score updates the existing one (lower scores are rejected)
+- Leaderboard auto-refreshes every 5 seconds
+- Guest placeholder shows username after login
+- Logout button appears in header when logged in
 
-Notes:
+Features:
 
-- For small events or classrooms, public insert/select is fine. For stricter control, require auth or limit inserts by IP/rate via Edge Functions.
-- Rotate the anon key or tighten policies after your event if needed.
+- **Username/password only** - no email addresses required
+- **One score per user** enforced by database unique constraint
+- **Score updates only if higher** - prevents score downgrade
+- **Secure authentication** via Supabase Auth
+- **Row Level Security** ensures users can only modify their own scores
 
 ---
 
