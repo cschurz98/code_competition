@@ -77,6 +77,51 @@ Notes/tips:
 
 ---
 
+## Live Leaderboard (Supabase)
+
+Replace the old JSON Load/Save with a live leaderboard backed by a free Supabase database.
+
+Setup (one-time):
+
+- Create a free project at https://supabase.com and note your Project URL and anon (public) API key: Settings → API.
+- In SQL editor, create a table and open public policies:
+
+```sql
+create table if not exists public.scores (
+	id bigint generated always as identity primary key,
+	name text not null,
+	score integer not null,
+	status text,
+	timestamp timestamptz not null default now()
+);
+
+alter table public.scores enable row level security;
+create policy "Public read scores" on public.scores for select using (true);
+create policy "Public insert scores" on public.scores for insert with check (true);
+```
+
+- Copy `js/leaderboard.config.example.js` to `js/leaderboard.config.js` and fill:
+
+```js
+window.LEADERBOARD_CONFIG = {
+	url: 'https://YOUR_PROJECT.supabase.co',
+	anonKey: 'YOUR_ANON_PUBLIC_KEY',
+	table: 'scores'
+};
+```
+
+Usage:
+
+- When config is present, the Leaderboard buttons become Submit/Refresh, and the list auto-refreshes every 5 seconds.
+- Data is stored in `public.scores`. No server to maintain.
+
+Notes:
+
+- For small events or classrooms, public insert/select is fine. For stricter control, require auth or limit inserts by IP/rate via Edge Functions.
+- Rotate the anon key or tighten policies after your event if needed.
+
+---
+
 ## Scoring (short)
 
 - Base score for passing required test cases.

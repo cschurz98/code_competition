@@ -1,5 +1,6 @@
 import { PROBLEMS } from './problems.js';
 import { deepEqual, calibrateMachine, downloadJSON } from './utils.js';
+import { fetchLeaderboard as remoteFetchLeaderboard, submitScore as remoteSubmitScore, isRemoteEnabled } from './leaderboard.js';
 
 // ---- Application state ----
 const state = {
@@ -474,6 +475,27 @@ function updateLeaderboardUI() {
 
 // ---- Import / Export leaderboard ----
 function exportData() {
+  // If remote leaderboard is enabled, submit to database; otherwise fallback to JSON download
+  if (isRemoteEnabled()) {
+    const name = prompt('Enter your name for the leaderboard:', els.usernameDisplay.textContent || 'Player');
+    if (!name) return;
+    els.usernameDisplay.textContent = name;
+    const status = `Submitted: ${new Date().toLocaleTimeString()}`;
+    remoteSubmitScore(name, state.myScore, status).then(res => {
+      if (!res.ok) {
+        alert('Submit failed: ' + res.error);
+        return;
+      }
+      // refresh leaderboard after submit
+      remoteFetchLeaderboard().then(r => {
+        if (r.ok) {
+          state.leaderboardData = r.data;
+          updateLeaderboardUI();
+        }
+      });
+    });
+    return;
+  }
   const name = prompt('Enter your name to save with your score:', 'Player 1');
   if (!name) return;
   const myRecord = { name, score: state.myScore, status: `Saved: ${new Date().toLocaleTimeString()}`, timestamp: Date.now() };
@@ -485,6 +507,19 @@ function exportData() {
 }
 
 function importData(ev) {
+  // If remote leaderboard is enabled, refresh from database; otherwise read JSON file
+  if (isRemoteEnabled()) {
+    remoteFetchLeaderboard().then(r => {
+      if (!r.ok) {
+        alert('Refresh failed: ' + r.error);
+        return;
+      }
+      state.leaderboardData = r.data;
+      updateLeaderboardUI();
+      alert('Leaderboard refreshed.');
+    });
+    return;
+  }
   const file = ev.target.files?.[0];
   if (!file) return;
   const reader = new FileReader();
@@ -1054,6 +1089,26 @@ function init() {
   loadProblem(PROBLEMS[0]);
   setupListeners();
   updateLeaderboardUI();
+  // If remote is enabled, adjust UI and start periodic refresh
+  if (isRemoteEnabled()) {
+    try {
+      // Change button labels for clarity
+      if (els.btnExport) els.btnExport.textContent = 'Submit';
+      if (els.btnImport) els.btnImport.textContent = 'Refresh';
+      // Import button should trigger remote refresh instead of file picker
+      if (els.btnImport) {
+        els.btnImport.replaceWith(els.btnImport.cloneNode(true));
+        const newImportBtn = document.getElementById('btn-import');
+        if (newImportBtn) newImportBtn.addEventListener('click', () => importData({ target: {} }));
+      }
+      // Start a periodic refresh to keep leaderboard live
+      setInterval(() => {
+        remoteFetchLeaderboard().then(r => {
+          if (r.ok) { state.leaderboardData = r.data; updateLeaderboardUI(); }
+        });
+      }, 5000);
+    } catch(e) {}
+  }
   lucide.createIcons();
   // run initial lint/syntax check for the preloaded starter code
   handleInput();
