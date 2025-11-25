@@ -2,6 +2,7 @@
 
 ![CodeClash](https://img.shields.io/badge/CodeClash-static--webapp-blue?style=flat)
 ![Status](https://img.shields.io/badge/status-stable-green)
+![License](https://img.shields.io/badge/license-CC%20BY--NC%204.0-yellow)
 
 CodeClash is a clean, client-side coding challenge playground built using ES modules. It provides a compact, browser-based editor, visual test/console output, and scoring (correctness + efficiency).
 
@@ -103,7 +104,14 @@ Contributions are welcome — problems, test improvements, UI polish, and better
 
 ## License
 
-This project is provided for learning / demo use. Add a `LICENSE` file to specify a license if you want to change this.
+This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0).
+
+You are free to copy, modify, and redistribute the code and assets, provided you:
+
+- Give appropriate credit (attribution) to the original author; and
+- Do not use the project or its contents for commercial purposes.
+
+See `LICENSE` for the full license text and details: https://creativecommons.org/licenses/by-nc/4.0/
 
 ---
 
