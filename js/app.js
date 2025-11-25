@@ -14,6 +14,8 @@ const state = {
   leaderboardData: [],
   speedFactor: 1.0
   ,sortMode: localStorage.getItem('codeclash.sortMode') || 'id'
+  ,generatedCases: {} // store per-problem generated/randomized test cases
+  ,problemCode: {} // store user's code for each problem
 };
 
 // ---- DOM references (collected once) ----
@@ -52,6 +54,8 @@ const els = {
   statusWarning: document.getElementById('status-warning'),
   usernameDisplay: document.getElementById('username-display')
   ,scoringPanel: document.getElementById('scoring-panel')
+  ,tabDocs: document.getElementById('tab-docs')
+  ,docsPanel: document.getElementById('docs-panel')
 };
 
 // ---- Utility: update line numbers ----
@@ -64,6 +68,10 @@ function updateLineNumbers() {
 let debounceTimer = null;
 function handleInput() {
   state.code = els.editor.value;
+  // Save code for current problem
+  if (state.currentProblem) {
+    state.problemCode[state.currentProblem.id] = state.code;
+  }
   updateLineNumbers();
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
@@ -653,7 +661,8 @@ window.switchProblem = (id) => {
 
 function loadProblem(problem) {
   state.currentProblem = problem;
-  state.code = problem.starterCode;
+  // Load saved code for this problem, or use starter code if none exists
+  state.code = state.problemCode[problem.id] !== undefined ? state.problemCode[problem.id] : problem.starterCode;
   state.syntaxError = null;
   els.editor.value = state.code;
   updateLineNumbers();
@@ -663,12 +672,15 @@ function loadProblem(problem) {
   const diffColor = problem.difficulty === 'Easy' ? 'emerald' : problem.difficulty === 'Medium' ? 'yellow' : 'red';
   els.problemDifficulty.textContent = problem.difficulty;
   els.problemDifficulty.className = `px-2 py-0.5 rounded text-xs font-semibold bg-${diffColor}-500/10 text-${diffColor}-400`;
+  // Show static testCases as examples, but generate randomized cases for actual testing
   els.exampleCases.innerHTML = problem.testCases.slice(0,2).map(tc => `
     <div class="bg-slate-950 rounded-lg p-3 border border-slate-800 font-mono text-xs">
       <div class="mb-1"><span class="text-slate-500">Input:</span> <span class="text-indigo-300">${JSON.stringify(tc.input)}</span></div>
       <div><span class="text-slate-500">Output:</span> <span class="text-emerald-300">${JSON.stringify(tc.expected)}</span></div>
     </div>
   `).join('');
+  // Generate randomized test cases for actual execution (regenerated on load)
+  state.generatedCases[problem.id] = (problem.randomize ? problem.randomize() : problem.testCases.slice());
   els.consoleLogs.innerHTML = `<div class="text-slate-600 italic">Run your code to see results...</div>`;
   updateSyntaxUI();
   // Update the dynamic scoring panel for the newly loaded problem
@@ -743,8 +755,12 @@ async function runCode() {
       const logs = [];
       let allPassed = true;
 
-      // functional tests
-      state.currentProblem.testCases.forEach(tc => {
+      // Regenerate test cases each run for randomization
+      const testCases = state.currentProblem.randomize 
+        ? state.currentProblem.randomize() 
+        : (state.generatedCases[state.currentProblem.id] || state.currentProblem.testCases || []);
+      
+      testCases.forEach(tc => {
         try {
           const inClone = JSON.parse(JSON.stringify(tc.input));
           const result = userFunc(...inClone);
@@ -895,6 +911,11 @@ function openConsole() {
   els.tabConsole.classList.remove('text-slate-500', 'border-transparent');
   els.tabProblem.classList.remove('text-white', 'border-indigo-500');
   els.tabProblem.classList.add('text-slate-500', 'border-transparent');
+  if (els.tabDocs) {
+    els.tabDocs.classList.remove('text-white', 'border-indigo-500');
+    els.tabDocs.classList.add('text-slate-500', 'border-transparent');
+  }
+  if (els.docsPanel) els.docsPanel.classList.add('hidden');
 }
 
 function hideConsole() {
@@ -905,12 +926,107 @@ function hideConsole() {
   els.tabConsole.classList.add('text-slate-500', 'border-transparent');
   els.tabProblem.classList.add('text-white', 'border-indigo-500');
   els.tabProblem.classList.remove('text-slate-500', 'border-transparent');
+  if (els.tabDocs) {
+    els.tabDocs.classList.remove('text-white', 'border-indigo-500');
+    els.tabDocs.classList.add('text-slate-500', 'border-transparent');
+  }
+  if (els.docsPanel) els.docsPanel.classList.add('hidden');
+}
+
+function openDocs() {
+  // collapse console
+  els.consolePanel.style.height = '2.5rem';
+  els.consoleHeaderCollapsed.classList.remove('hidden');
+  els.consoleContent.classList.add('hidden');
+  // tab states
+  els.tabProblem.classList.remove('text-white', 'border-indigo-500');
+  els.tabProblem.classList.add('text-slate-500', 'border-transparent');
+  els.tabConsole.classList.remove('text-white', 'border-indigo-500');
+  els.tabConsole.classList.add('text-slate-500', 'border-transparent');
+  if (els.tabDocs) {
+    els.tabDocs.classList.add('text-white', 'border-indigo-500');
+    els.tabDocs.classList.remove('text-slate-500', 'border-transparent');
+  }
+  if (els.docsPanel) {
+    els.docsPanel.classList.remove('hidden');
+    // ensure icons are refreshed if docs newly visible
+    try { if (window.lucide) window.lucide.createIcons(); } catch(e){}
+  }
+}
+
+function hideDocs() {
+  if (els.docsPanel) els.docsPanel.classList.add('hidden');
+  if (els.tabDocs) {
+    els.tabDocs.classList.remove('text-white', 'border-indigo-500');
+    els.tabDocs.classList.add('text-slate-500', 'border-transparent');
+  }
+}
+
+function resetProblem() {
+  if (!state.currentProblem) return;
+  // Clear saved code and reload with starter code
+  delete state.problemCode[state.currentProblem.id];
+  state.code = state.currentProblem.starterCode;
+  state.syntaxError = null;
+  els.editor.value = state.code;
+  updateLineNumbers();
+  handleInput();
 }
 
 function setupListeners() {
   els.editor.addEventListener('input', handleInput);
   els.editor.addEventListener('scroll', () => els.lineNumbers.scrollTop = els.editor.scrollTop);
-  els.btnReset.addEventListener('click', () => loadProblem(state.currentProblem));
+  
+  // Handle Tab key for indentation and auto-completion for brackets, quotes, etc.
+  els.editor.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const start = els.editor.selectionStart;
+      const end = els.editor.selectionEnd;
+      const value = els.editor.value;
+      
+      // Insert tab (2 spaces) at cursor position
+      els.editor.value = value.substring(0, start) + '  ' + value.substring(end);
+      
+      // Move cursor after the inserted tab
+      els.editor.selectionStart = els.editor.selectionEnd = start + 2;
+      
+      // Trigger input event to update state and line numbers
+      handleInput();
+    }
+  });
+
+  // Auto-complete brackets, quotes, parentheses
+  els.editor.addEventListener('input', (e) => {
+    // Only handle single character inputs
+    if (e.inputType !== 'insertText' || !e.data || e.data.length !== 1) return;
+    
+    const pairs = {
+      '(': ')',
+      '[': ']',
+      '{': '}',
+      '"': '"',
+      "'": "'",
+      '`': '`'
+    };
+    
+    const char = e.data;
+    if (pairs[char]) {
+      const start = els.editor.selectionStart;
+      const value = els.editor.value;
+      
+      // Insert closing character
+      els.editor.value = value.substring(0, start) + pairs[char] + value.substring(start);
+      
+      // Move cursor between the pair
+      els.editor.selectionStart = els.editor.selectionEnd = start;
+      
+      // Trigger handleInput for state update
+      handleInput();
+    }
+  });
+  
+  els.btnReset.addEventListener('click', resetProblem);
   els.btnRun.addEventListener('click', () => { if (!state.isRunning) runCode(); });
   els.btnExport.addEventListener('click', exportData);
   els.btnImport.addEventListener('click', () => els.jsonInput.click());
@@ -918,6 +1034,7 @@ function setupListeners() {
   els.tabConsole.addEventListener('click', openConsole);
   els.consoleHeaderCollapsed.addEventListener('click', openConsole);
   els.tabProblem.addEventListener('click', hideConsole);
+  if (els.tabDocs) els.tabDocs.addEventListener('click', openDocs);
   // sort selector
   if (els.sortSelect) {
     // initialize select to current saved mode
