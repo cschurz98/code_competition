@@ -1193,11 +1193,11 @@ function updateUserDisplay() {
   if (user) {
     const username = user.user_metadata?.username || user.email?.split('@')[0] || 'User';
     els.usernameDisplay.textContent = username;
-    const avatar = document.querySelector('header .w-8.h-8.rounded-full');
+    const avatar = document.getElementById('user-avatar');
     if (avatar) avatar.textContent = username[0].toUpperCase();
   } else {
     els.usernameDisplay.textContent = 'Guest';
-    const avatar = document.querySelector('header .w-8.h-8.rounded-full');
+    const avatar = document.getElementById('user-avatar');
     if (avatar) avatar.textContent = 'G';
   }
 }
@@ -1213,6 +1213,27 @@ function init() {
     try {
       // Check for existing session and update UI
       updateUserDisplay();
+      
+      // Add click handler to user avatar for login/logout
+      const userAvatar = document.getElementById('user-avatar');
+      if (userAvatar) {
+        userAvatar.addEventListener('click', () => {
+          const user = getUser();
+          if (user) {
+            // Show logout confirmation
+            if (confirm('Do you want to logout?')) {
+              logout().then(() => {
+                updateUserDisplay();
+                alert('Logged out successfully');
+              });
+            }
+          } else {
+            // Show login modal
+            showLoginModal();
+          }
+        });
+      }
+      
       // Change button labels for clarity
       if (els.btnExport) els.btnExport.textContent = 'Submit';
       if (els.btnImport) els.btnImport.textContent = 'Refresh';
@@ -1221,19 +1242,6 @@ function init() {
         els.btnImport.replaceWith(els.btnImport.cloneNode(true));
         const newImportBtn = document.getElementById('btn-import');
         if (newImportBtn) newImportBtn.addEventListener('click', () => importData({ target: {} }));
-      }
-      // Add logout button to header
-      const userArea = document.querySelector('header .flex.items-center.gap-2');
-      if (userArea && getUser()) {
-        const logoutBtn = document.createElement('button');
-        logoutBtn.className = 'text-xs px-2 py-1 bg-slate-700 hover:bg-slate-600 rounded text-slate-300';
-        logoutBtn.textContent = 'Logout';
-        logoutBtn.addEventListener('click', async () => {
-          await logout();
-          updateUserDisplay();
-          alert('Logged out successfully');
-        });
-        userArea.insertBefore(logoutBtn, userArea.firstChild);
       }
       // Start a periodic refresh to keep leaderboard live
       setInterval(() => {
