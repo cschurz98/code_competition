@@ -65,7 +65,7 @@ function updateLineNumbers() {
   els.lineNumbers.innerHTML = Array.from({ length: lines }, (_, i) => `<div>${i + 1}</div>`).join('');
 }
 
-// ---- Syntax check (debounced) ----
+// ---- Syntax check (real-time) ----
 let debounceTimer = null;
 function handleInput() {
   state.code = els.editor.value;
@@ -84,16 +84,32 @@ function handleInput() {
     if (typeof window !== 'undefined' && window.acorn) {
       try {
         const ast = window.acorn.parse(state.code, { ecmaVersion: 'latest', locations: true, sourceType: 'script' });
-        // detect undeclared variables (treat as errors)
+        
+        // Check for all types of errors
         const undeclared = findUndeclaredVars(ast);
+        const semiIssues = findMissingSemicolons(ast, state.code);
+        
+        // Combine all errors - prioritize showing both undeclared vars and semicolons together
+        if (undeclared.length || semiIssues.length) {
+          const errors = [];
+          
           if (undeclared.length) {
-            state.syntaxError = { name: 'Undeclared Variable', message: undeclared.slice(0, 6).map(d => `${d.name} (line ${d.line})`).join(', ') + (undeclared.length > 6 ? ` +${undeclared.length - 6} more` : '') };
-          } else {
-            // gather a broad set of lint warnings (semicolons, unused vars, no-var, eqeqeq, no-console)
-            const semiIssues = findMissingSemicolons(ast, state.code);
-            const extra = findAdditionalLintIssues(ast, state.code);
-            state.lintWarnings = [...semiIssues, ...extra];
+            errors.push('Undeclared: ' + undeclared.slice(0, 3).map(d => `${d.name} (line ${d.line})`).join(', ') + (undeclared.length > 3 ? ` +${undeclared.length - 3} more` : ''));
           }
+          
+          if (semiIssues.length) {
+            errors.push('Missing semicolons on line(s): ' + semiIssues.slice(0, 3).map(s => s.line).join(', ') + (semiIssues.length > 3 ? ` +${semiIssues.length - 3} more` : ''));
+          }
+          
+          state.syntaxError = { 
+            name: 'Code Errors', 
+            message: errors.join(' • ') 
+          };
+        } else {
+          // gather other lint warnings (unused vars, no-var, eqeqeq, no-console)
+          const extra = findAdditionalLintIssues(ast, state.code);
+          state.lintWarnings = [...extra];
+        }
       } catch (err) {
         state.syntaxError = { name: err.name || 'SyntaxError', message: err.message || String(err) };
       }
@@ -107,7 +123,7 @@ function handleInput() {
     }
 
     updateSyntaxUI();
-  }, 500);
+  }, 50); // Check syntax every 50ms for near-instant feedback
 }
 
 // ---- Analysis helpers (AST-based) ----
@@ -253,28 +269,113 @@ function findUndeclaredVars(ast) {
 
 function findMissingSemicolons(ast, source) {
   const issues = [];
-  function walk(node) {
+  
+  function walk(node, parent) {
     if (!node || typeof node.type !== 'string') return;
-    // check nodes where semicolon is commonly present: ExpressionStatement, VariableDeclaration, ReturnStatement
-    if (node.type === 'ExpressionStatement' || node.type === 'VariableDeclaration' || node.type === 'ReturnStatement') {
-      const snippet = source.slice(node.start, node.end).trimRight();
-      // ignore blocks and function declarations (these aren't expected to have semicolons)
+    
+    // Statement types that require semicolons
+    const requiresSemicolon = [
+      'ExpressionStatement',
+      'VariableDeclaration',
+      'ReturnStatement',
+      'BreakStatement',
+      'ContinueStatement',
+      'ThrowStatement',
+      'DebuggerStatement',
+      'ImportDeclaration',
+      'ExportNamedDeclaration',
+      'ExportDefaultDeclaration',
+      'ExportAllDeclaration'
+    ];
+    
+    if (requiresSemicolon.includes(node.type)) {
+      // Special handling for export default with function/class expressions
+      if (node.type === 'ExportDefaultDeclaration' && 
+          (node.declaration?.type === 'FunctionDeclaration' || 
+           node.declaration?.type === 'ClassDeclaration')) {
+        // These don't need semicolons
+        return;
+      }
+      
+      // Get the actual source text for this node
+      const snippet = source.slice(node.start, node.end).trimEnd();
+      
+      // Check if statement ends with semicolon
       if (snippet && !snippet.endsWith(';')) {
-        // when code ends with '}' it's okay (e.g. function declaration). Only warn for single-line exprs
-        if (!snippet.endsWith('}')) {
-          issues.push({ message: `${node.type} may be missing a terminating semicolon`, line: node.loc && node.loc.end && node.loc.end.line });
+        // Exception: VariableDeclarations ending with function/class expressions don't need semicolons
+        // e.g., const x = function() {} or const X = class {}
+        if (node.type === 'VariableDeclaration') {
+          const lastDecl = node.declarations[node.declarations.length - 1];
+          if (lastDecl?.init) {
+            const initType = lastDecl.init.type;
+            if (initType === 'FunctionExpression' || 
+                initType === 'ClassExpression' ||
+                initType === 'ArrowFunctionExpression') {
+              // Check if it truly ends with } (not followed by other code)
+              const initSnippet = source.slice(lastDecl.init.start, lastDecl.init.end).trimEnd();
+              if (initSnippet.endsWith('}')) {
+                // Still needs semicolon for consistency
+                issues.push({ 
+                  message: 'Statement missing terminating semicolon', 
+                  line: node.loc?.end?.line 
+                });
+              }
+            } else {
+              // Regular variable declaration needs semicolon
+              issues.push({ 
+                message: 'Statement missing terminating semicolon', 
+                line: node.loc?.end?.line 
+              });
+            }
+          } else {
+            // Declaration without init needs semicolon
+            issues.push({ 
+              message: 'Statement missing terminating semicolon', 
+              line: node.loc?.end?.line 
+            });
+          }
+        } else if (node.type === 'ExpressionStatement') {
+          // ExpressionStatements ending with } (like IIFEs) still need semicolons
+          if (!snippet.endsWith('}')) {
+            issues.push({ 
+              message: 'Statement missing terminating semicolon', 
+              line: node.loc?.end?.line 
+            });
+          } else {
+            // Check if it's a function/class expression
+            const expr = node.expression;
+            if (expr?.type === 'FunctionExpression' || 
+                expr?.type === 'ClassExpression' ||
+                (expr?.type === 'CallExpression' && expr.callee?.type === 'FunctionExpression')) {
+              // Function expressions and IIFEs need semicolons
+              issues.push({ 
+                message: 'Statement missing terminating semicolon', 
+                line: node.loc?.end?.line 
+              });
+            }
+          }
+        } else {
+          // All other statement types need semicolons
+          issues.push({ 
+            message: 'Statement missing terminating semicolon', 
+            line: node.loc?.end?.line 
+          });
         }
       }
     }
-
+    
+    // Recursively walk child nodes
     for (const key of Object.keys(node)) {
       const child = node[key];
-      if (Array.isArray(child)) for (const c of child) walk(c);
-      else if (child && typeof child.type === 'string') walk(child);
+      if (Array.isArray(child)) {
+        for (const c of child) walk(c, node);
+      } else if (child && typeof child === 'object' && child.type) {
+        walk(child, node);
+      }
     }
   }
 
-  walk(ast);
+  walk(ast, null);
   return issues;
 }
 
@@ -712,7 +813,7 @@ function loadProblem(problem) {
   els.problemDifficulty.textContent = problem.difficulty;
   els.problemDifficulty.className = `px-2 py-0.5 rounded text-xs font-semibold bg-${diffColor}-500/10 text-${diffColor}-400`;
   // Show static testCases as examples, but generate randomized cases for actual testing
-  els.exampleCases.innerHTML = problem.testCases.slice(0,2).map(tc => `
+  els.exampleCases.innerHTML = problem.testCases.map(tc => `
     <div class="bg-slate-950 rounded-lg p-3 border border-slate-800 font-mono text-xs">
       <div class="mb-1"><span class="text-slate-500">Input:</span> <span class="text-indigo-300">${JSON.stringify(tc.input)}</span></div>
       <div><span class="text-slate-500">Output:</span> <span class="text-emerald-300">${JSON.stringify(tc.expected)}</span></div>

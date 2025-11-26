@@ -14,7 +14,8 @@ export const PROBLEMS = [
     testCases: [
       { input: [[2, 7, 11, 15], 9], expected: [0, 1] },
       { input: [[3, 2, 4], 6], expected: [1, 2] },
-      { input: [[3, 3], 6], expected: [0, 1] }
+      { input: [[3, 3], 6], expected: [0, 1] },
+      { input: [[-1, -2, -3, -4, -5], -8], expected: [2, 4] }
     ],
     stressTest: () => {
       const size = 8000;
@@ -40,7 +41,9 @@ export const PROBLEMS = [
     testCases: [
       { input: [121], expected: true },
       { input: [-121], expected: false },
-      { input: [10], expected: false }
+      { input: [10], expected: false },
+      { input: [0], expected: true },
+      { input: [12321], expected: true }
     ],
     stressTest: () => ({
       input: [123456789],
@@ -63,7 +66,8 @@ export const PROBLEMS = [
 }`,
     testCases: [
       { input: [3], expected: ["1", "2", "Fizz"] },
-      { input: [5], expected: ["1", "2", "Fizz", "4", "Buzz"] }
+      { input: [5], expected: ["1", "2", "Fizz", "4", "Buzz"] },
+      { input: [15], expected: ["1", "2", "Fizz", "4", "Buzz", "Fizz", "7", "8", "Fizz", "Buzz", "11", "Fizz", "13", "14", "FizzBuzz"] }
     ],
     stressTest: () => ({ input: [300000], expected: null, checkOutput: res => res.length === 300000 && res[14] === "FizzBuzz" }),
     baseThresholds: { optimal: 40, acceptable: 150 }
@@ -81,7 +85,9 @@ export const PROBLEMS = [
     testCases: [
       { input: ["hello"], expected: "olleh" },
       { input: [""], expected: "" },
-      { input: ["abc"], expected: "cba" }
+      { input: ["abc"], expected: "cba" },
+      { input: ["a"], expected: "a" },
+      { input: ["Hello World!"], expected: "!dlroW olleH" }
     ],
     stressTest: () => ({ input: [Array.from({ length: 200000 }, () => 'a').join('')], expected: null }),
     baseThresholds: { optimal: 2, acceptable: 20 }
@@ -99,7 +105,9 @@ export const PROBLEMS = [
     testCases: [
       { input: [[1,1,2]], expected: [1,2] },
       { input: [[1,1,1,1]], expected: [1] },
-      { input: [[1,2,3]], expected: [1,2,3] }
+      { input: [[1,2,3]], expected: [1,2,3] },
+      { input: [[]], expected: [] },
+      { input: [[0,0,1,1,1,2,2,3,3,4]], expected: [0,1,2,3,4] }
     ],
     stressTest: () => ({ input: [Array.from({ length: 100000 }, (_, i) => Math.floor(i/2))], expected: null }),
     baseThresholds: { optimal: 5, acceptable: 40 }
@@ -117,7 +125,10 @@ export const PROBLEMS = [
     testCases: [
       { input: ["()"], expected: true },
       { input: ["()[]{}"], expected: true },
-      { input: ["(]"], expected: false }
+      { input: ["(]"], expected: false },
+      { input: ["([)]"], expected: false },
+      { input: ["{[]}"], expected: true },
+      { input: [""], expected: true }
     ],
     stressTest: () => ({ input: [Array.from({ length: 50000 }, (_, i) => (i % 2 === 0 ? '(' : ')')).join('')], expected: null, isBatch: true, batchSize: 20000 }),
     baseThresholds: { optimal: 5, acceptable: 30 }
@@ -135,7 +146,9 @@ export const PROBLEMS = [
     testCases: [
       { input: [[1,2,3,4,5], 3], expected: 2 },
       { input: [[1,2,3], 4], expected: -1 },
-      { input: [[], 1], expected: -1 }
+      { input: [[], 1], expected: -1 },
+      { input: [[5], 5], expected: 0 },
+      { input: [[-1,0,3,5,9,12], 9], expected: 4 }
     ],
     stressTest: () => ({ input: [[...Array.from({ length: 200000 }, (_, i) => i),], 199999], expected: 199999 }),
     baseThresholds: { optimal: 2, acceptable: 15 }
@@ -153,7 +166,9 @@ export const PROBLEMS = [
     testCases: [
       { input: [[-2,1,-3,4,-1,2,1,-5,4]], expected: 6 },
       { input: [[1]], expected: 1 },
-      { input: [[5,4,-1,7,8]], expected: 23 }
+      { input: [[5,4,-1,7,8]], expected: 23 },
+      { input: [[-1,-2,-3,-4]], expected: -1 },
+      { input: [[0,-1,2,-3,4]], expected: 4 }
     ],
     stressTest: () => ({ input: [Array.from({ length: 40000 }, (_, i) => (i%2===0? i : -i))], expected: null }),
     baseThresholds: { optimal: 10, acceptable: 60 }
@@ -171,7 +186,9 @@ export const PROBLEMS = [
     testCases: [
       { input: [["flower","flow","flight"]], expected: "fl" },
       { input: [["dog","racecar","car"]], expected: "" },
-      { input: [["a"]], expected: "a" }
+      { input: [["a"]], expected: "a" },
+      { input: [["prefix","pre","prepare"]], expected: "pre" },
+      { input: [["test","test","test"]], expected: "test" }
     ],
     stressTest: () => ({ input: [Array.from({ length: 50000 }, () => 'prefix_common_suffix')], expected: null }),
     baseThresholds: { optimal: 5, acceptable: 40 }
@@ -188,7 +205,9 @@ export const PROBLEMS = [
 }`,
     testCases: [
       { input: [[1,8,6,2,5,4,8,3,7]], expected: 49 },
-      { input: [[1,1]], expected: 1 }
+      { input: [[1,1]], expected: 1 },
+      { input: [[4,3,2,1,4]], expected: 16 },
+      { input: [[1,2,1]], expected: 2 }
     ],
     stressTest: () => ({ input: [Array.from({ length: 60000 }, (_, i) => Math.abs(Math.sin(i)) * 100)], expected: null }),
     baseThresholds: { optimal: 25, acceptable: 120 }
@@ -205,7 +224,9 @@ export const PROBLEMS = [
 }`,
     testCases: [
       { input: [[1,2,3,4,5,6,7], 3], expected: [5,6,7,1,2,3,4] },
-      { input: [[-1,-100,3,99], 2], expected: [3,99,-1,-100] }
+      { input: [[-1,-100,3,99], 2], expected: [3,99,-1,-100] },
+      { input: [[1,2], 0], expected: [1,2] },
+      { input: [[1,2,3], 4], expected: [3,1,2] }
     ],
     stressTest: () => ({ input: [Array.from({ length: 200000 }, (_, i) => i), 50000], expected: null }),
     baseThresholds: { optimal: 8, acceptable: 60 }
@@ -222,7 +243,9 @@ export const PROBLEMS = [
 }`,
     testCases: [
       { input: [[0,1,0,3,12]], expected: [1,3,12,0,0] },
-      { input: [[0]], expected: [0] }
+      { input: [[0]], expected: [0] },
+      { input: [[1,2,3]], expected: [1,2,3] },
+      { input: [[0,0,0,1,2]], expected: [1,2,0,0,0] }
     ],
     stressTest: () => ({ input: [Array.from({ length: 150000 }, (_, i) => (i%5===0?0:i))], expected: null }),
     baseThresholds: { optimal: 5, acceptable: 30 }
@@ -240,7 +263,10 @@ export const PROBLEMS = [
     testCases: [
       { input: [1], expected: true },
       { input: [16], expected: true },
-      { input: [218], expected: false }
+      { input: [218], expected: false },
+      { input: [0], expected: false },
+      { input: [2], expected: true },
+      { input: [3], expected: false }
     ],
     stressTest: () => ({ input: [Math.pow(2, 30)], expected: true }),
     baseThresholds: { optimal: 2, acceptable: 15 }
@@ -257,7 +283,9 @@ export const PROBLEMS = [
 }`,
     testCases: [
       { input: [["eat","tea","tan","ate","nat","bat"]], expected: [["eat","tea","ate"],["tan","nat"],["bat"]] },
-      { input: [[""]], expected: [[""]] }
+      { input: [[""]], expected: [[""]] },
+      { input: [["a"]], expected: [["a"]] },
+      { input: [["listen","silent","enlist"]], expected: [["listen","silent","enlist"]] }
     ],
     stressTest: () => ({ input: [Array.from({ length: 50000 }, (_, i) => i%2===0? 'abc' : 'bca')], expected: null }),
     baseThresholds: { optimal: 12, acceptable: 80 }
@@ -274,7 +302,9 @@ export const PROBLEMS = [
 }`,
     testCases: [
       { input: [[1,1,1,2,2,3], 2], expected: [1,2] },
-      { input: [[1], 1], expected: [1] }
+      { input: [[1], 1], expected: [1] },
+      { input: [[4,1,-1,2,-1,2,3], 2], expected: [-1,2] },
+      { input: [[1,2,2,3,3,3], 1], expected: [3] }
     ],
     stressTest: () => ({ input: [Array.from({ length: 200000 }, (_, i) => Math.floor(Math.random()*1000)), 10], expected: null }),
     baseThresholds: { optimal: 30, acceptable: 150 }
@@ -466,8 +496,10 @@ PROBLEMS.forEach(problem => {
 
       case 3: { // FizzBuzz
         out.push({ input: [3], expected: computeFizzBuzz(3) });
-        out.push({ input: [randInt(rnd, 5, 30)], expected: null /* caller can check with checkOutput */ });
-        out.push({ input: [randInt(rnd, 50, 200)], expected: computeFizzBuzz(randInt(rnd, 50, 200)) });
+        const n1 = randInt(rnd, 5, 30);
+        out.push({ input: [n1], expected: computeFizzBuzz(n1) });
+        const n2 = randInt(rnd, 50, 200);
+        out.push({ input: [n2], expected: computeFizzBuzz(n2) });
         break;
       }
 
