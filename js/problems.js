@@ -18,20 +18,20 @@ export const PROBLEMS = [
       { input: [[-1, -2, -3, -4, -5], -8], expected: [2, 4] }
     ],
     stressTest: () => {
-      const size = 8000;
+      const size = 15000;
       const nums = Array.from({ length: size }, (_, i) => i);
       nums[size - 2] = 10000;
       nums[size - 1] = 10001;
       return { input: [nums, 20001], expected: [size - 2, size - 1] };
     },
-    baseThresholds: { optimal: 10, acceptable: 100 }
+    baseThresholds: { excellent: 5, great: 15, good: 50, acceptable: 150, poor: 300 }
   },
 
   {
     id: 2,
     title: "Palindrome Check",
-    difficulty: "Easy",
-    points: 100,
+    difficulty: "Medium",
+    points: 200,
     description: "You are given a whole number. Determine if this number is a palindrome - meaning it reads the same forwards and backwards. For example, 121 is a palindrome because it's the same when reversed (1-2-1 backwards is still 1-2-1). However, 123 is not a palindrome because backwards it's 321. Negative numbers like -121 are never palindromes. Return true if the number is a palindrome, or false if it's not.",
     starterCode: `function isPalindrome(x) {
   // Convert to string or use math
@@ -49,9 +49,9 @@ export const PROBLEMS = [
       input: [123456789],
       expected: false,
       isBatch: true,
-      batchSize: 200000
+      batchSize: 500000
     }),
-    baseThresholds: { optimal: 20, acceptable: 80 }
+    baseThresholds: { excellent: 10, great: 25, good: 60, acceptable: 120, poor: 250 }
   },
 
   {
@@ -69,8 +69,8 @@ export const PROBLEMS = [
       { input: [5], expected: ["1", "2", "Fizz", "4", "Buzz"] },
       { input: [15], expected: ["1", "2", "Fizz", "4", "Buzz", "Fizz", "7", "8", "Fizz", "Buzz", "11", "Fizz", "13", "14", "FizzBuzz"] }
     ],
-    stressTest: () => ({ input: [300000], expected: null, checkOutput: res => res.length === 300000 && res[14] === "FizzBuzz" }),
-    baseThresholds: { optimal: 40, acceptable: 150 }
+    stressTest: () => ({ input: [500000], expected: null, checkOutput: res => res.length === 500000 && res[14] === "FizzBuzz" }),
+    baseThresholds: { excellent: 30, great: 60, good: 120, acceptable: 220, poor: 400 }
   }
   ,
   {
@@ -89,15 +89,15 @@ export const PROBLEMS = [
       { input: ["a"], expected: "a" },
       { input: ["Hello World!"], expected: "!dlroW olleH" }
     ],
-    stressTest: () => ({ input: [Array.from({ length: 200000 }, () => 'a').join('')], expected: null }),
-    baseThresholds: { optimal: 2, acceptable: 20 }
+    stressTest: () => ({ input: [Array.from({ length: 500000 }, () => 'a').join('')], expected: null }),
+    baseThresholds: { excellent: 2, great: 8, good: 20, acceptable: 50, poor: 100 }
   },
 
   {
     id: 5,
     title: "Remove Duplicates (return unique array)",
-    difficulty: "Easy",
-    points: 100,
+    difficulty: "Medium",
+    points: 200,
     description: "You are given a list (array) of numbers that is already sorted from smallest to largest. Create and return a new list that contains each unique number only once, keeping them in the same order. For example, if given [1, 1, 2], return [1, 2]. If given [1, 1, 1, 1], return [1]. The input list is already sorted, which can help you solve this efficiently.",
     starterCode: `function uniqueSorted(arr) {
   // return new array with duplicates removed
@@ -109,8 +109,8 @@ export const PROBLEMS = [
       { input: [[]], expected: [] },
       { input: [[0,0,1,1,1,2,2,3,3,4]], expected: [0,1,2,3,4] }
     ],
-    stressTest: () => ({ input: [Array.from({ length: 100000 }, (_, i) => Math.floor(i/2))], expected: null }),
-    baseThresholds: { optimal: 5, acceptable: 40 }
+    stressTest: () => ({ input: [Array.from({ length: 200000 }, (_, i) => Math.floor(i/2))], expected: null }),
+    baseThresholds: { excellent: 5, great: 15, good: 40, acceptable: 90, poor: 180 }
   },
 
   {
@@ -130,8 +130,8 @@ export const PROBLEMS = [
       { input: ["{[]}"], expected: true },
       { input: [""], expected: true }
     ],
-    stressTest: () => ({ input: [Array.from({ length: 50000 }, (_, i) => (i % 2 === 0 ? '(' : ')')).join('')], expected: null, isBatch: true, batchSize: 20000 }),
-    baseThresholds: { optimal: 5, acceptable: 30 }
+    stressTest: () => ({ input: [Array.from({ length: 100000 }, (_, i) => (i % 2 === 0 ? '(' : ')')).join('')], expected: null, isBatch: true, batchSize: 30000 }),
+    baseThresholds: { excellent: 8, great: 20, good: 50, acceptable: 100, poor: 200 }
   },
 
   {
@@ -150,8 +150,8 @@ export const PROBLEMS = [
       { input: [[5], 5], expected: 0 },
       { input: [[-1,0,3,5,9,12], 9], expected: 4 }
     ],
-    stressTest: () => ({ input: [[...Array.from({ length: 200000 }, (_, i) => i),], 199999], expected: 199999 }),
-    baseThresholds: { optimal: 2, acceptable: 15 }
+    stressTest: () => ({ input: [[...Array.from({ length: 500000 }, (_, i) => i),], 499999], expected: 499999 }),
+    baseThresholds: { excellent: 1, great: 3, good: 10, acceptable: 30, poor: 100 }
   },
 
   {
@@ -170,8 +170,8 @@ export const PROBLEMS = [
       { input: [[-1,-2,-3,-4]], expected: -1 },
       { input: [[0,-1,2,-3,4]], expected: 4 }
     ],
-    stressTest: () => ({ input: [Array.from({ length: 40000 }, (_, i) => (i%2===0? i : -i))], expected: null }),
-    baseThresholds: { optimal: 10, acceptable: 60 }
+    stressTest: () => ({ input: [Array.from({ length: 100000 }, (_, i) => (i%2===0? i : -i))], expected: null }),
+    baseThresholds: { excellent: 10, great: 25, good: 60, acceptable: 130, poor: 280 }
   },
 
   {
@@ -190,8 +190,8 @@ export const PROBLEMS = [
       { input: [["prefix","pre","prepare"]], expected: "pre" },
       { input: [["test","test","test"]], expected: "test" }
     ],
-    stressTest: () => ({ input: [Array.from({ length: 50000 }, () => 'prefix_common_suffix')], expected: null }),
-    baseThresholds: { optimal: 5, acceptable: 40 }
+    stressTest: () => ({ input: [Array.from({ length: 100000 }, () => 'prefix_common_suffix')], expected: null }),
+    baseThresholds: { excellent: 8, great: 20, good: 50, acceptable: 110, poor: 220 }
   },
 
   {
@@ -199,7 +199,7 @@ export const PROBLEMS = [
     title: "Container With Most Water",
     difficulty: "Medium",
     points: 200,
-    description: "Imagine you have vertical lines at different heights. You need to pick two lines that, together with the ground, form a container that can hold the most water. The amount of water is calculated as: (distance between the two lines) × (height of the shorter line). For example, with heights [1, 8, 6, 2, 5, 4, 8, 3, 7], using the lines at positions 1 and 8 (both height 8, distance 7 apart) gives area = 7 × 7 = 49. Return the maximum area possible.",
+    description: "You are given a list of heights representing vertical lines positioned at consecutive positions (0, 1, 2, 3...). You need to pick any two lines to form a rectangle with the horizontal axis (ground). The rectangle's area equals: (width between positions) × (height of shorter line).<br><br><img src='resources/Container-of-water.jpg' alt='Container with most water visualization' style='max-width: 100%; height: auto; margin: 10px 0;'><br><br>For example, given heights [1, 8, 6, 2, 5, 4, 8, 3, 7], if you pick the line at position 1 (height 8) and position 8 (height 7), the width is 8-1=7 positions and the usable height is min(8,7)=7, giving area = 7 × 7 = 49. Your goal is to find the two lines that create the maximum possible area. Return this maximum area.",
     starterCode: `function maxArea(height) {
   // return max area
 }`,
@@ -209,8 +209,8 @@ export const PROBLEMS = [
       { input: [[4,3,2,1,4]], expected: 16 },
       { input: [[1,2,1]], expected: 2 }
     ],
-    stressTest: () => ({ input: [Array.from({ length: 60000 }, (_, i) => Math.abs(Math.sin(i)) * 100)], expected: null }),
-    baseThresholds: { optimal: 25, acceptable: 120 }
+    stressTest: () => ({ input: [Array.from({ length: 100000 }, (_, i) => Math.abs(Math.sin(i)) * 100)], expected: null }),
+    baseThresholds: { excellent: 15, great: 35, good: 80, acceptable: 180, poor: 350 }
   },
 
   {
@@ -228,8 +228,8 @@ export const PROBLEMS = [
       { input: [[1,2], 0], expected: [1,2] },
       { input: [[1,2,3], 4], expected: [3,1,2] }
     ],
-    stressTest: () => ({ input: [Array.from({ length: 200000 }, (_, i) => i), 50000], expected: null }),
-    baseThresholds: { optimal: 8, acceptable: 60 }
+    stressTest: () => ({ input: [Array.from({ length: 400000 }, (_, i) => i), 100000], expected: null }),
+    baseThresholds: { excellent: 8, great: 20, good: 50, acceptable: 120, poor: 250 }
   },
 
   {
@@ -247,8 +247,8 @@ export const PROBLEMS = [
       { input: [[1,2,3]], expected: [1,2,3] },
       { input: [[0,0,0,1,2]], expected: [1,2,0,0,0] }
     ],
-    stressTest: () => ({ input: [Array.from({ length: 150000 }, (_, i) => (i%5===0?0:i))], expected: null }),
-    baseThresholds: { optimal: 5, acceptable: 30 }
+    stressTest: () => ({ input: [Array.from({ length: 300000 }, (_, i) => (i%5===0?0:i))], expected: null }),
+    baseThresholds: { excellent: 8, great: 20, good: 50, acceptable: 100, poor: 200 }
   },
 
   {
@@ -268,8 +268,8 @@ export const PROBLEMS = [
       { input: [2], expected: true },
       { input: [3], expected: false }
     ],
-    stressTest: () => ({ input: [Math.pow(2, 30)], expected: true }),
-    baseThresholds: { optimal: 2, acceptable: 15 }
+    stressTest: () => ({ input: [Math.pow(2, 30)], expected: true, isBatch: true, batchSize: 1000000 }),
+    baseThresholds: { excellent: 5, great: 15, good: 40, acceptable: 80, poor: 150 }
   },
 
   {
@@ -287,8 +287,8 @@ export const PROBLEMS = [
       { input: [["a"]], expected: [["a"]] },
       { input: [["listen","silent","enlist"]], expected: [["listen","silent","enlist"]] }
     ],
-    stressTest: () => ({ input: [Array.from({ length: 50000 }, (_, i) => i%2===0? 'abc' : 'bca')], expected: null }),
-    baseThresholds: { optimal: 12, acceptable: 80 }
+    stressTest: () => ({ input: [Array.from({ length: 100000 }, (_, i) => i%2===0? 'abc' : 'bca')], expected: null }),
+    baseThresholds: { excellent: 20, great: 45, good: 100, acceptable: 220, poor: 450 }
   },
 
   {
@@ -306,8 +306,8 @@ export const PROBLEMS = [
       { input: [[4,1,-1,2,-1,2,3], 2], expected: [-1,2] },
       { input: [[1,2,2,3,3,3], 1], expected: [3] }
     ],
-    stressTest: () => ({ input: [Array.from({ length: 200000 }, (_, i) => Math.floor(Math.random()*1000)), 10], expected: null }),
-    baseThresholds: { optimal: 30, acceptable: 150 }
+    stressTest: () => ({ input: [Array.from({ length: 300000 }, (_, i) => Math.floor(Math.random()*1000)), 10], expected: null }),
+    baseThresholds: { excellent: 35, great: 70, good: 140, acceptable: 280, poor: 550 }
   }
 ];
 

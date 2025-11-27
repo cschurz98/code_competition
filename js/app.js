@@ -808,7 +808,7 @@ function loadProblem(problem) {
   updateLineNumbers();
   renderProblemList();
   els.problemTitle.textContent = problem.title;
-  els.problemDesc.textContent = problem.description;
+  els.problemDesc.innerHTML = problem.description;
   const diffColor = problem.difficulty === 'Easy' ? 'emerald' : problem.difficulty === 'Medium' ? 'yellow' : 'red';
   els.problemDifficulty.textContent = problem.difficulty;
   els.problemDifficulty.className = `px-2 py-0.5 rounded text-xs font-semibold bg-${diffColor}-500/10 text-${diffColor}-400`;
@@ -834,33 +834,61 @@ function renderScoringPanel() {
   const p = state.currentProblem || {};
   const base = p.points ?? 0;
   // support older/variant naming
-  const thresholds = p.baseThresholds || p.timeThresholds || { optimal: null, acceptable: null };
-
-  // Efficiency bonus rules (kept in sync with runCode bonuses)
-  const optimalBonus = 50;
-  const acceptableBonus = 20;
-
-  const optimalStr = thresholds.optimal != null ? `${thresholds.optimal}ms or less` : 'N/A';
-  const acceptableStr = thresholds.acceptable != null ? `${thresholds.acceptable}ms or less` : 'N/A';
+  const thresholds = p.baseThresholds || p.timeThresholds || { excellent: null, great: null, good: null, acceptable: null, poor: null };
 
   // stress test hint
-  let stressHint = 'This problem has a stress test used to estimate runtime behavior.';
+  let stressHint = 'This problem has a stress test used to estimate runtime behavior with 5 performance tiers.';
   if (!p.stressTest) stressHint = 'No stress test available for this problem — only functional tests are used.';
 
   panel.innerHTML = `
     <div class="mb-6 bg-slate-900/50 rounded-lg p-4 border border-slate-700/50">
       <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
         <i data-lucide="award" class="w-4 h-4 text-indigo-400"></i>
-        Efficiency Scoring
+        Efficiency Scoring (5-Tier System)
       </h3>
-      <div class="grid grid-cols-2 gap-4 text-center mb-4">
-        <div class="bg-slate-800/50 rounded p-2 border border-slate-700">
-          <div class="text-[10px] text-slate-400 font-bold uppercase mb-1">Base Score</div>
-          <div class="text-sm text-white">${base} pts — awarded for passing tests</div>
-        </div>
-        <div class="bg-slate-800/50 rounded p-2 border border-emerald-500/20 bg-emerald-900/10">
-          <div class="text-[10px] text-emerald-400 font-bold uppercase mb-1">Efficiency Bonus</div>
-          <div class="text-sm text-white">+${optimalBonus} pts if normalized time ≤ ${optimalStr}<br>+${acceptableBonus} pts if normalized time ≤ ${acceptableStr}</div>
+      <div class="mb-4 bg-slate-800/50 rounded p-3 border border-slate-700">
+        <div class="text-[10px] text-slate-400 font-bold uppercase mb-2">Base Score</div>
+        <div class="text-sm text-white text-center">${base} pts — awarded for passing all tests</div>
+      </div>
+      <div class="bg-slate-800/50 rounded p-3 border border-emerald-500/20 bg-emerald-900/10 mb-3">
+        <div class="text-[10px] text-emerald-400 font-bold uppercase mb-2">Performance Bonuses (Normalized Time)</div>
+        <div class="space-y-1.5 text-xs">
+          <div class="flex items-center justify-between p-1.5 rounded ${thresholds.excellent != null ? 'bg-emerald-900/20' : 'opacity-50'}">
+            <span class="text-emerald-400 font-semibold flex items-center gap-1">
+              <i data-lucide="award" class="w-3 h-3"></i> Excellent
+            </span>
+            <span class="text-slate-300">${thresholds.excellent != null ? `≤ ${thresholds.excellent}ms` : 'N/A'} = <span class="text-emerald-400 font-bold">+50 pts</span></span>
+          </div>
+          <div class="flex items-center justify-between p-1.5 rounded ${thresholds.great != null ? 'bg-cyan-900/20' : 'opacity-50'}">
+            <span class="text-cyan-400 font-semibold flex items-center gap-1">
+              <i data-lucide="star" class="w-3 h-3"></i> Great
+            </span>
+            <span class="text-slate-300">${thresholds.great != null ? `≤ ${thresholds.great}ms` : 'N/A'} = <span class="text-cyan-400 font-bold">+40 pts</span></span>
+          </div>
+          <div class="flex items-center justify-between p-1.5 rounded ${thresholds.good != null ? 'bg-blue-900/20' : 'opacity-50'}">
+            <span class="text-blue-400 font-semibold flex items-center gap-1">
+              <i data-lucide="thumbs-up" class="w-3 h-3"></i> Good
+            </span>
+            <span class="text-slate-300">${thresholds.good != null ? `≤ ${thresholds.good}ms` : 'N/A'} = <span class="text-blue-400 font-bold">+30 pts</span></span>
+          </div>
+          <div class="flex items-center justify-between p-1.5 rounded ${thresholds.acceptable != null ? 'bg-yellow-900/20' : 'opacity-50'}">
+            <span class="text-yellow-400 font-semibold flex items-center gap-1">
+              <i data-lucide="info" class="w-3 h-3"></i> Acceptable
+            </span>
+            <span class="text-slate-300">${thresholds.acceptable != null ? `≤ ${thresholds.acceptable}ms` : 'N/A'} = <span class="text-yellow-400 font-bold">+20 pts</span></span>
+          </div>
+          <div class="flex items-center justify-between p-1.5 rounded ${thresholds.poor != null ? 'bg-orange-900/20' : 'opacity-50'}">
+            <span class="text-orange-400 font-semibold flex items-center gap-1">
+              <i data-lucide="alert-triangle" class="w-3 h-3"></i> Poor
+            </span>
+            <span class="text-slate-300">${thresholds.poor != null ? `≤ ${thresholds.poor}ms` : 'N/A'} = <span class="text-orange-400 font-bold">+10 pts</span></span>
+          </div>
+          <div class="flex items-center justify-between p-1.5 rounded bg-red-900/20">
+            <span class="text-red-400 font-semibold flex items-center gap-1">
+              <i data-lucide="alert-circle" class="w-3 h-3"></i> Inefficient
+            </span>
+            <span class="text-slate-300">${thresholds.poor != null ? `> ${thresholds.poor}ms` : 'Too slow'} = <span class="text-red-400 font-bold">+0 pts</span></span>
+          </div>
         </div>
       </div>
       <p class="text-[11px] text-slate-500 leading-relaxed text-center mb-2">${stressHint}</p>
@@ -914,7 +942,7 @@ async function runCode() {
       });
 
       // stress test and scoring
-      let efficiencyBonus = 0, timeComplexityLabel = 'N/A', execTime = 0, normalizedTime = 0;
+      let efficiencyBonus = 0, timeComplexityLabel = 'N/A', execTime = 0, normalizedTime = 0, performanceTier = 'none';
       if (allPassed && state.currentProblem.stressTest) {
         const stressData = state.currentProblem.stressTest();
         const start = performance.now();
@@ -928,9 +956,38 @@ async function runCode() {
         execTime = end - start;
         normalizedTime = execTime / state.speedFactor;
         const t = state.currentProblem.baseThresholds;
-        if (normalizedTime <= t.optimal) { efficiencyBonus = 50; timeComplexityLabel = 'Excellent (Likely O(n) or better)'; }
-        else if (normalizedTime <= t.acceptable) { efficiencyBonus = 20; timeComplexityLabel = 'Good (Likely O(n log n))'; }
-        else { efficiencyBonus = 0; timeComplexityLabel = 'Inefficient (Likely O(n²) or worse)'; }
+        
+        // 5-tier granular scoring system
+        if (normalizedTime <= t.excellent) { 
+          efficiencyBonus = 50; 
+          timeComplexityLabel = 'Excellent - Optimal Algorithm'; 
+          performanceTier = 'excellent';
+        }
+        else if (normalizedTime <= t.great) { 
+          efficiencyBonus = 40; 
+          timeComplexityLabel = 'Great - Very Efficient'; 
+          performanceTier = 'great';
+        }
+        else if (normalizedTime <= t.good) { 
+          efficiencyBonus = 30; 
+          timeComplexityLabel = 'Good - Efficient Solution'; 
+          performanceTier = 'good';
+        }
+        else if (normalizedTime <= t.acceptable) { 
+          efficiencyBonus = 20; 
+          timeComplexityLabel = 'Acceptable - Room for Optimization'; 
+          performanceTier = 'acceptable';
+        }
+        else if (normalizedTime <= t.poor) { 
+          efficiencyBonus = 10; 
+          timeComplexityLabel = 'Poor - Needs Optimization'; 
+          performanceTier = 'poor';
+        }
+        else { 
+          efficiencyBonus = 0; 
+          timeComplexityLabel = 'Inefficient - Major Optimization Needed'; 
+          performanceTier = 'inefficient';
+        }
       }
 
       const runScore = state.currentProblem.points + efficiencyBonus;
@@ -954,7 +1011,7 @@ async function runCode() {
         els.consoleMiniStatus.textContent = 'Console Output (Failed)';
       }
 
-      renderLogs(logs, allPassed, efficiencyBonus, timeComplexityLabel, execTime, normalizedTime, isNewBest, previousBest);
+      renderLogs(logs, allPassed, efficiencyBonus, timeComplexityLabel, execTime, normalizedTime, isNewBest, previousBest, performanceTier);
       els.executionTime.classList.remove('hidden');
       els.timeVal.textContent = `${execTime.toFixed(2)}ms`;
 
@@ -969,7 +1026,7 @@ async function runCode() {
   }, 500);
 }
 
-function renderLogs(logs, allPassed, bonus, complexity, rawTime, normTime, isNewBest, previousBest) {
+function renderLogs(logs, allPassed, bonus, complexity, rawTime, normTime, isNewBest, previousBest, performanceTier = 'none') {
   let html = logs.map(log => `
     <div class="p-3 rounded border ${log.passed ? 'bg-emerald-950/30 border-emerald-900/50' : 'bg-red-950/30 border-red-900/50'}">
       <div class="flex items-center gap-2 mb-2">
@@ -994,20 +1051,51 @@ function renderLogs(logs, allPassed, bonus, complexity, rawTime, normTime, isNew
     const totalRunScore = state.currentProblem.points + bonus;
     const scoreMessage = isNewBest ? `<span class="text-emerald-400 font-bold">New Best Score!</span>` : `<span class="text-slate-400">Previous Best: ${previousBest} pts</span>`;
     const speedInfo = `Computer Speed Factor: ${state.speedFactor.toFixed(2)}x (Raw: ${rawTime.toFixed(2)}ms ➔ Norm: ${normTime.toFixed(2)}ms)`;
+    
+    // Color coding based on performance tier
+    const tierColors = {
+      excellent: 'text-emerald-400',
+      great: 'text-cyan-400',
+      good: 'text-blue-400',
+      acceptable: 'text-yellow-400',
+      poor: 'text-orange-400',
+      inefficient: 'text-red-400',
+      none: 'text-slate-400'
+    };
+    
+    const tierIcons = {
+      excellent: 'award',
+      great: 'star',
+      good: 'thumbs-up',
+      acceptable: 'info',
+      poor: 'alert-triangle',
+      inefficient: 'alert-circle',
+      none: 'zap'
+    };
+    
+    const complexityColor = tierColors[performanceTier] || tierColors.none;
+    const tierIcon = tierIcons[performanceTier] || tierIcons.none;
+    
     html += `
       <div class="mt-4 p-4 bg-slate-900 rounded border border-indigo-500/30">
-        <div class="flex items-center gap-2 mb-2">
-          <i data-lucide="zap" class="w-4 h-4 text-yellow-400"></i>
+        <div class="flex items-center gap-2 mb-3">
+          <i data-lucide="${tierIcon}" class="w-4 h-4 text-yellow-400"></i>
           <span class="font-bold text-white">Performance Analysis</span>
         </div>
-        <div class="grid grid-cols-2 gap-4 text-xs font-mono">
+        <div class="grid grid-cols-2 gap-4 text-xs font-mono mb-3">
           <div>
-            <div class="text-slate-500">Stress Test Time</div>
+            <div class="text-slate-500 mb-1">Stress Test Time</div>
             <div class="text-slate-300" title="${speedInfo}">${normTime.toFixed(2)}ms <span class="text-slate-600">(normalized)</span></div>
           </div>
           <div>
-            <div class="text-slate-500">Est. Complexity</div>
-            <div class="${bonus === 50 ? 'text-emerald-400' : bonus === 20 ? 'text-yellow-400' : 'text-red-400'}">${complexity}</div>
+            <div class="text-slate-500 mb-1">Performance Rating</div>
+            <div class="${complexityColor} font-bold">${complexity}</div>
+          </div>
+        </div>
+        <div class="mt-2 pt-3 border-t border-slate-700/50">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-500">Efficiency Bonus</span>
+            <span class="font-bold ${bonus >= 40 ? 'text-emerald-400' : bonus >= 20 ? 'text-yellow-400' : bonus >= 10 ? 'text-orange-400' : 'text-slate-400'}">+${bonus} pts</span>
           </div>
         </div>
       </div>
