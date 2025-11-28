@@ -2,6 +2,112 @@
 export const PROBLEMS = [
   {
     id: 1,
+    title: "Add Two Numbers",
+    difficulty: "Very Easy",
+    points: 50,
+    description: "Write a function that takes two numbers and returns their sum. This is your first step in learning JavaScript! For example, if given the numbers 5 and 3, your function should return 8. If given 10 and -2, return 8.",
+    starterCode: `function addNumbers(a, b) {
+  // Add the two numbers together and return the result
+  
+}`,
+    testCases: [
+      { input: [5, 3], expected: 8 },
+      { input: [10, -2], expected: 8 },
+      { input: [0, 0], expected: 0 },
+      { input: [-5, -5], expected: -10 },
+      { input: [100, 200], expected: 300 }
+    ],
+    stressTest: () => ({ input: [123456, 654321], expected: 777777, isBatch: true, batchSize: 100000 }),
+    baseThresholds: { excellent: 1, great: 3, good: 8, acceptable: 15, poor: 30 }
+  },
+
+  {
+    id: 2,
+    title: "Check If Even",
+    difficulty: "Very Easy",
+    points: 50,
+    description: "Write a function that checks if a number is even (divisible by 2 with no remainder). Return true if the number is even, false if it's odd. For example, 4 is even (returns true), but 7 is odd (returns false). Hint: Use the modulo operator (%) which gives you the remainder of division.",
+    starterCode: `function isEven(n) {
+  // Check if n is even
+  // Return true or false
+  
+}`,
+    testCases: [
+      { input: [4], expected: true },
+      { input: [7], expected: false },
+      { input: [0], expected: true },
+      { input: [-2], expected: true },
+      { input: [101], expected: false }
+    ],
+    stressTest: () => ({ input: [1000000], expected: true, isBatch: true, batchSize: 100000 }),
+    baseThresholds: { excellent: 1, great: 3, good: 8, acceptable: 15, poor: 30 }
+  },
+
+  {
+    id: 3,
+    title: "Find Maximum",
+    difficulty: "Very Easy",
+    points: 50,
+    description: "Write a function that finds the largest number in a list (array) of numbers. For example, in the list [3, 7, 2, 9, 1], the maximum is 9. The list will always have at least one number. Hint: You can use Math.max() with the spread operator (...), or loop through the array.",
+    starterCode: `function findMax(numbers) {
+  // Find and return the largest number
+  
+}`,
+    testCases: [
+      { input: [[3, 7, 2, 9, 1]], expected: 9 },
+      { input: [[5]], expected: 5 },
+      { input: [[-1, -5, -3]], expected: -1 },
+      { input: [[0, 0, 0]], expected: 0 },
+      { input: [[100, 50, 75, 200, 150]], expected: 200 }
+    ],
+    stressTest: () => ({ input: [Array.from({ length: 10000 }, (_, i) => i)], expected: 9999 }),
+    baseThresholds: { excellent: 2, great: 5, good: 12, acceptable: 25, poor: 50 }
+  },
+
+  {
+    id: 4,
+    title: "Count Vowels",
+    difficulty: "Very Easy",
+    points: 50,
+    description: "Write a function that counts how many vowels (a, e, i, o, u) are in a word or sentence. For example, 'hello' has 2 vowels (e and o). The input will be a string. Don't worry about uppercase vs lowercase - you can convert the string to lowercase first. Return the count as a number.",
+    starterCode: `function countVowels(str) {
+  // Count the vowels in the string
+  
+}`,
+    testCases: [
+      { input: ["hello"], expected: 2 },
+      { input: ["javascript"], expected: 3 },
+      { input: ["aeiou"], expected: 5 },
+      { input: ["xyz"], expected: 0 },
+      { input: ["Hello World"], expected: 3 }
+    ],
+    stressTest: () => ({ input: ["a".repeat(5000)], expected: 5000 }),
+    baseThresholds: { excellent: 2, great: 6, good: 15, acceptable: 30, poor: 60 }
+  },
+
+  {
+    id: 5,
+    title: "Repeat String",
+    difficulty: "Very Easy",
+    points: 50,
+    description: "Write a function that repeats a string a certain number of times. For example, if given 'hi' and the number 3, return 'hihihi'. If the number is 0 or negative, return an empty string ''. Hint: You can use the built-in repeat() method, or use a loop to build the result.",
+    starterCode: `function repeatString(str, times) {
+  // Repeat the string 'times' number of times
+  
+}`,
+    testCases: [
+      { input: ["hi", 3], expected: "hihihi" },
+      { input: ["a", 5], expected: "aaaaa" },
+      { input: ["hello", 1], expected: "hello" },
+      { input: ["test", 0], expected: "" },
+      { input: ["x", -1], expected: "" }
+    ],
+    stressTest: () => ({ input: ["a", 10000], expected: "a".repeat(10000) }),
+    baseThresholds: { excellent: 2, great: 5, good: 12, acceptable: 25, poor: 50 }
+  },
+
+  {
+    id: 6,
     title: "The Classic Two Sum",
     difficulty: "Easy",
     points: 100,
@@ -28,7 +134,7 @@ export const PROBLEMS = [
   },
 
   {
-    id: 2,
+    id: 7,
     title: "Palindrome Check",
     difficulty: "Medium",
     points: 200,
@@ -55,7 +161,7 @@ export const PROBLEMS = [
   },
 
   {
-    id: 3,
+    id: 8,
     title: "FizzBuzz Architect",
     difficulty: "Easy",
     points: 100,
@@ -74,7 +180,7 @@ export const PROBLEMS = [
   }
   ,
   {
-    id: 4,
+    id: 9,
     title: "Reverse String",
     difficulty: "Easy",
     points: 100,
@@ -94,7 +200,7 @@ export const PROBLEMS = [
   },
 
   {
-    id: 5,
+    id: 10,
     title: "Remove Duplicates (return unique array)",
     difficulty: "Medium",
     points: 200,
@@ -114,7 +220,7 @@ export const PROBLEMS = [
   },
 
   {
-    id: 6,
+    id: 11,
     title: "Valid Parentheses",
     difficulty: "Easy",
     points: 100,
@@ -135,7 +241,7 @@ export const PROBLEMS = [
   },
 
   {
-    id: 7,
+    id: 12,
     title: "Binary Search",
     difficulty: "Easy",
     points: 100,
@@ -155,7 +261,7 @@ export const PROBLEMS = [
   },
 
   {
-    id: 8,
+    id: 13,
     title: "Maximum Subarray (Kadane)",
     difficulty: "Hard",
     points: 300,
@@ -175,7 +281,7 @@ export const PROBLEMS = [
   },
 
   {
-    id: 9,
+    id: 14,
     title: "Longest Common Prefix",
     difficulty: "Easy",
     points: 100,
@@ -195,7 +301,7 @@ export const PROBLEMS = [
   },
 
   {
-    id: 10,
+    id: 15,
     title: "Container With Most Water",
     difficulty: "Medium",
     points: 200,
@@ -214,7 +320,7 @@ export const PROBLEMS = [
   },
 
   {
-    id: 11,
+    id: 16,
     title: "Rotate Array",
     difficulty: "Easy",
     points: 100,
@@ -233,7 +339,7 @@ export const PROBLEMS = [
   },
 
   {
-    id: 12,
+    id: 17,
     title: "Move Zeroes",
     difficulty: "Easy",
     points: 100,
@@ -252,7 +358,7 @@ export const PROBLEMS = [
   },
 
   {
-    id: 13,
+    id: 18,
     title: "Power of Two",
     difficulty: "Easy",
     points: 100,
@@ -273,7 +379,7 @@ export const PROBLEMS = [
   },
 
   {
-    id: 14,
+    id: 19,
     title: "Group Anagrams",
     difficulty: "Hard",
     points: 300,
@@ -292,7 +398,7 @@ export const PROBLEMS = [
   },
 
   {
-    id: 15,
+    id: 20,
     title: "Top K Frequent Elements",
     difficulty: "Hard",
     points: 300,
@@ -461,7 +567,52 @@ PROBLEMS.forEach(problem => {
     const rnd = mulberry32(s);
     const out = [];
     switch (problem.id) {
-      case 1: { // Two Sum
+      case 1: { // Add Two Numbers
+        for (let t = 0; t < 3; t++) {
+          const a = randInt(rnd, -100, 100);
+          const b = randInt(rnd, -100, 100);
+          out.push({ input: [a, b], expected: a + b });
+        }
+        break;
+      }
+
+      case 2: { // Check If Even
+        for (let t = 0; t < 3; t++) {
+          const n = randInt(rnd, -100, 100);
+          out.push({ input: [n], expected: n % 2 === 0 });
+        }
+        break;
+      }
+
+      case 3: { // Find Maximum
+        for (let t = 0; t < 3; t++) {
+          const len = randInt(rnd, 1, 10);
+          const arr = Array.from({ length: len }, () => randInt(rnd, -50, 50));
+          out.push({ input: [arr], expected: Math.max(...arr) });
+        }
+        break;
+      }
+
+      case 4: { // Count Vowels
+        const words = ['hello', 'javascript', 'programming', 'easy', 'test'];
+        for (let t = 0; t < 3; t++) {
+          const word = words[Math.floor(rnd() * words.length)];
+          const vowelCount = (word.match(/[aeiou]/gi) || []).length;
+          out.push({ input: [word], expected: vowelCount });
+        }
+        break;
+      }
+
+      case 5: { // Repeat String
+        for (let t = 0; t < 3; t++) {
+          const str = ['a', 'hi', 'test'][Math.floor(rnd() * 3)];
+          const times = randInt(rnd, 0, 5);
+          out.push({ input: [str, times], expected: str.repeat(Math.max(0, times)) });
+        }
+        break;
+      }
+
+      case 6: { // Two Sum
         for (let t = 0; t < 3; t++) {
           const n = randInt(rnd, 3, 12);
           const nums = Array.from({ length: n }, () => randInt(rnd, -50, 200));
@@ -476,7 +627,7 @@ PROBLEMS.forEach(problem => {
         break;
       }
 
-      case 2: { // Palindrome Check
+      case 7: { // Palindrome Check
         out.push({ input: [121], expected: true });
         out.push({ input: [-121], expected: false });
         // random batch of palindromes and non-palindromes
@@ -494,7 +645,7 @@ PROBLEMS.forEach(problem => {
         break;
       }
 
-      case 3: { // FizzBuzz
+      case 8: { // FizzBuzz
         out.push({ input: [3], expected: computeFizzBuzz(3) });
         const n1 = randInt(rnd, 5, 30);
         out.push({ input: [n1], expected: computeFizzBuzz(n1) });
@@ -503,7 +654,7 @@ PROBLEMS.forEach(problem => {
         break;
       }
 
-      case 4: { // Reverse String
+      case 9: { // Reverse String
         out.push({ input: ['hello'], expected: 'olleh' });
         for (let t = 0; t < 3; t++) {
           const len = randInt(rnd, 0, 30);
@@ -514,7 +665,7 @@ PROBLEMS.forEach(problem => {
         break;
       }
 
-      case 5: { // Unique Sorted
+      case 10: { // Unique Sorted
         out.push({ input: [[1,1,2]], expected: [1,2] });
         for (let t = 0; t < 3; t++) {
           const n = randInt(rnd, 1, 30);
@@ -525,7 +676,7 @@ PROBLEMS.forEach(problem => {
         break;
       }
 
-      case 6: { // Valid Parentheses
+      case 11: { // Valid Parentheses
         out.push({ input: ['()'], expected: true });
         out.push({ input: ['(]'], expected: false });
         // create a valid parentheses string by nesting random pairs
@@ -536,7 +687,7 @@ PROBLEMS.forEach(problem => {
         break;
       }
 
-      case 7: { // Binary Search
+      case 12: { // Binary Search
         for (let t = 0; t < 3; t++) {
           const n = randInt(rnd, 0, 30);
           const arr = Array.from({ length: n }, (_, i) => i * randInt(rnd,1,3));
@@ -547,7 +698,7 @@ PROBLEMS.forEach(problem => {
         break;
       }
 
-      case 8: { // Maximum Subarray
+      case 13: { // Maximum Subarray
         out.push({ input: [[-2,1,-3,4,-1,2,1,-5,4]], expected: 6 });
         for (let t = 0; t < 2; t++) {
           const n = randInt(rnd, 1, 50);
@@ -557,7 +708,7 @@ PROBLEMS.forEach(problem => {
         break;
       }
 
-      case 9: { // Longest Common Prefix
+      case 14: { // Longest Common Prefix
         out.push({ input: [['flower','flow','flight']], expected: 'fl' });
         out.push({ input: [['dog','racecar','car']], expected: '' });
         // randomized group with common prefix
@@ -567,7 +718,7 @@ PROBLEMS.forEach(problem => {
         break;
       }
 
-      case 10: { // Container With Most Water
+      case 15: { // Container With Most Water
         out.push({ input: [[1,8,6,2,5,4,8,3,7]], expected: 49 });
         for (let t = 0; t < 2; t++) {
           const n = randInt(rnd, 2, 30);
@@ -577,7 +728,7 @@ PROBLEMS.forEach(problem => {
         break;
       }
 
-      case 11: { // Rotate Array
+      case 16: { // Rotate Array
         out.push({ input: [[1,2,3,4,5,6,7], 3], expected: [5,6,7,1,2,3,4] });
         for (let t = 0; t < 2; t++) {
           const n = randInt(rnd, 0, 20);
@@ -588,7 +739,7 @@ PROBLEMS.forEach(problem => {
         break;
       }
 
-      case 12: { // Move Zeroes
+      case 17: { // Move Zeroes
         out.push({ input: [[0,1,0,3,12]], expected: [1,3,12,0,0] });
         for (let t = 0; t < 2; t++) {
           const n = randInt(rnd, 1, 30);
@@ -598,7 +749,7 @@ PROBLEMS.forEach(problem => {
         break;
       }
 
-      case 13: { // Power of Two
+      case 18: { // Power of Two
         out.push({ input: [1], expected: true });
         out.push({ input: [16], expected: true });
         for (let t = 0; t < 3; t++) {
@@ -609,7 +760,7 @@ PROBLEMS.forEach(problem => {
         break;
       }
 
-      case 14: { // Group Anagrams
+      case 19: { // Group Anagrams
         out.push({ input: [['eat','tea','tan','ate','nat','bat']], expected: computeGroupAnagrams(['eat','tea','tan','ate','nat','bat']) });
         for (let t = 0; t < 2; t++) {
           const strs = [];
@@ -620,7 +771,7 @@ PROBLEMS.forEach(problem => {
         break;
       }
 
-      case 15: { // Top K Frequent
+      case 20: { // Top K Frequent
         out.push({ input: [[1,1,1,2,2,3], 2], expected: [1,2] });
         for (let t = 0; t < 2; t++) {
           const n = randInt(rnd, 5, 100);

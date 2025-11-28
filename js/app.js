@@ -654,7 +654,7 @@ function renderProblemList() {
   problemsClone.sort((a, b) => {
     if (sortMode === 'points') return b.points - a.points; // high -> low
     if (sortMode === 'difficulty') {
-      const map = { 'Easy': 0, 'Medium': 1, 'Hard': 2 };
+      const map = { 'Very Easy': 0, 'Easy': 1, 'Medium': 2, 'Hard': 3 };
       return (map[a.difficulty] || 0) - (map[b.difficulty] || 0);
     }
     if (sortMode === 'title') return a.title.localeCompare(b.title);
@@ -695,7 +695,7 @@ function renderProblemList() {
 
         // populate preview
         previewTitle.textContent = `${prob.title}`;
-        previewMeta.innerHTML = `${prob.points} pts &nbsp;•&nbsp; <span class="text-xs font-semibold ${prob.difficulty === 'Easy' ? 'text-emerald-400' : prob.difficulty === 'Medium' ? 'text-yellow-400' : 'text-red-400'}">${prob.difficulty}</span>`;
+        previewMeta.innerHTML = `${prob.points} pts &nbsp;•&nbsp; <span class="text-xs font-semibold ${prob.difficulty === 'Very Easy' ? 'text-blue-400' : prob.difficulty === 'Easy' ? 'text-emerald-400' : prob.difficulty === 'Medium' ? 'text-yellow-400' : 'text-red-400'}">${prob.difficulty}</span>`;
         const descSnippet = (prob.description || '').slice(0, 220);
         previewDesc.textContent = descSnippet + (prob.description && prob.description.length > 220 ? '…' : '');
 
@@ -809,7 +809,7 @@ function loadProblem(problem) {
   renderProblemList();
   els.problemTitle.textContent = problem.title;
   els.problemDesc.innerHTML = problem.description;
-  const diffColor = problem.difficulty === 'Easy' ? 'emerald' : problem.difficulty === 'Medium' ? 'yellow' : 'red';
+  const diffColor = problem.difficulty === 'Very Easy' ? 'blue' : problem.difficulty === 'Easy' ? 'emerald' : problem.difficulty === 'Medium' ? 'yellow' : 'red';
   els.problemDifficulty.textContent = problem.difficulty;
   els.problemDifficulty.className = `px-2 py-0.5 rounded text-xs font-semibold bg-${diffColor}-500/10 text-${diffColor}-400`;
   // Show static testCases as examples, but generate randomized cases for actual testing
